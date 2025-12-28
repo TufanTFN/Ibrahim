@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MD OFFICE PRO | Enterprise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root { --blue: #2563eb; --dark: #0f172a; --bg: #f8fafc; --green: #22c55e; --red: #ef4444; --orange: #f59e0b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .hidden { display: none !important; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { cursor: pointer; background: var(--blue); color: white; border: none; font-weight: bold; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; background: var(--dark); padding: 10px; border-radius: 12px; }
+        .nav-btn { background: transparent; color: white; border: 1px solid #334155; padding: 8px 15px; font-size: 11px; border-radius: 8px; }
+        .trial-banner { background: var(--orange); color: white; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-weight: bold; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="authPage" style="max-width: 400px; margin: 50px auto;">
+        <div id="loginBox" class="card">
+            <h2>Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button onclick="doLogin()">Sign In</button>
+            <p align="center">New MD? <a href="#" onclick="toggleAuth(true)">Register Organization</a></p>
+        </div>
+        <div id="signupBox" class="card hidden">
+            <h2>MD Sign-Up</h2>
+            <input type="email" id="regEmail" placeholder="Work Email">
+            <input type="password" id="regPass" placeholder="Create Password">
+            <button onclick="registerMD()" style="background:var(--green)">Register & Start Trial</button>
+            <p align="center"><a href="#" onclick="toggleAuth(false)">Back to Login</a></p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden">
+        <div id="trialTimer" class="trial-banner hidden">Trial Access Ends In: <span id="timerText">--:--:--</span></div>
+        
+        <div class="nav">
+            <button class="nav-btn" onclick="showTab('recruitTab')">📋 Pipeline</button>
+            <button id="adminBtn" class="nav-btn hidden" onclick="showTab('adminTab')">⚙️ Settings</button>
+            <button onclick="location.reload()" style="background:var(--red); width:auto; margin-left:auto;">Logout</button>
+        </div>
+
+        <div id="recruitTab">
+            <div class="card">
+                <h3>Submit Candidate</h3>
+                <input id="cName" placeholder="Full Name">
+                <select id="cEdu">
+                    <option>BSc</option><option>HND</option><option>OND</option><option>LLB</option>
+                    <option>MSc</option><option>MBA</option><option>PhD</option><option>SSCE</option>
+                    <option>ND</option><option>B.Eng</option>
+                </select>
+                <select id="cGrade">
+                    <option>First Class</option><option>Second Class Upper</option><option>Second Class Lower</option>
+                    <option>Third Class</option><option>Distinction</option><option>Upper Credit</option>
+                    <option>Lower Credit</option><option>Merit</option><option>Pass</option>
+                </select>
+                <input id="cPos" placeholder="Job Role">
+                <button onclick="submitCandidate()">Submit to Pipeline</button>
+            </div>
+            <div class="card">
+                <table width="100%"><tbody id="tableBody"></tbody></table>
+            </div>
+        </div>
+
+        <div id="adminTab" class="hidden">
+            <div id="devConsole" class="card hidden" style="border: 2px solid var(--red);">
+                <h3 style="color:var(--red);">🛠 License Key Generator</h3>
+                <input type="number" id="keyDays" placeholder="Enter Days (e.g., 30, 365)">
+                <button onclick="generateKey()" style="background:var(--red)">Generate & Save Key</button>
+                <p id="keyDisplay" style="font-weight:bold; background:#eee; padding:5px;"></p>
+            </div>
+
+            <div id="mdStaffBox" class="card">
+                <h3>Add Staff Recruiter</h3>
+                <input id="staffEmail" placeholder="Recruiter Email">
+                <input id="staffPass" placeholder="Recruiter Password">
+                <button onclick="addStaff()" style="background:var(--green)">Create Recruiter Account</button>
+            </div>
+
+            <div class="card">
+                <h3>System Activation</h3>
+                <input id="licKey" placeholder="Paste License Key Here">
+                <button onclick="activateLic()" style="background:black">Activate License</button>
+                <button onclick="openPricing()" style="background:var(--blue); margin-top:5px;">Buy License (WhatsApp)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pricingModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="color:var(--blue);">Buy License</h2>
+            <p>Select your duration:</p>
+            <select id="buyDuration">
+                <option value="1 Week">1 Week</option>
+                <option value="1 Month">1 Month</option>
+                <option value="3 Months">3 Months</option>
+                <option value="1 Year">1 Year</option>
+            </select>
+            <button onclick="sendWhatsAppRequest()" style="background:var(--green);">💬 Chat with Technical Desk</button>
+            <button onclick="closePricing()" style="background:none; color:gray; margin-top:10px;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDpkdIuNV0gpISmprwvfHfM2fzRYhekcgYy2s0VbHHgV6vUg9QvRuOY6rZ-du10HNAcA/exec";
+        const MY_PHONE = "2347030151024";
+        let user = {};
+
+        async function registerMD() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPass').value;
+            await fetch(SCRIPT_URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify({action:'register_md', email, password})});
+            alert("MD Account Created! Please login to start your trial.");
+            toggleAuth(false);
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPass').value;
+            const res = await fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({action:'login', email, password})});
+            const data = await res.json();
+            if(data.success) {
+                user = data; user.email = email;
+                document.getElementById('authPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                if(user.role === "MD" || user.role === "DEV") document.getElementById('adminBtn').classList.remove('hidden');
+                if(user.role === "DEV") document.getElementById('devConsole').classList.remove('hidden');
+                startCountdown();
+                loadCandidates();
+            } else alert("Invalid Login Credentials");
+        }
+
+        function startCountdown() {
+            if(user.isPremium || user.role === "DEV") return;
+            document.getElementById('trialTimer').classList.remove('hidden');
+            const timerInterval = setInterval(() => {
+                const expiry = new Date(user.regDate).getTime() + (24 * 60 * 60 * 1000);
+                const distance = expiry - new Date().getTime();
+                if (distance < 0) { 
+                    clearInterval(timerInterval); 
+                    alert("Trial Expired. Please purchase a license."); 
+                    location.reload(); 
+                } else {
+                    const h = Math.floor((distance % 86400000) / 3600000);
+                    const m = Math.floor((distance % 3600000) / 60000);
+                    const s = Math.floor((distance % 60000) / 1000);
+                    document.getElementById('timerText').innerText = `${h}h ${m}m ${s}s`;
+                }
+            }, 1000);
+        }
+
+        function openPricing() { document.getElementById('pricingModal').classList.remove('hidden'); }
+        function closePricing() { document.getElementById('pricingModal').classList.add('hidden'); }
+        function sendWhatsAppRequest() {
+            const dur = document.getElementById('buyDuration').value;
+            const msg = encodeURIComponent(`Hello Admin, I want to purchase a ${dur} license key for MD Office Pro.`);
+            window.open(`https://wa.me/${MY_PHONE}?text=${msg}`, '_blank');
+        }
+
+        async function addStaff() {
+            await fetch(SCRIPT_URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify({action:'add_staff', staffEmail:document.getElementById('staffEmail').value, staffPass:document.getElementById('staffPass').value, adminEmail:user.email})});
+            alert("Staff Recruiter Account Created!");
+        }
+
+        async function generateKey() {
+            const res = await fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({action:'create_key', days:document.getElementById('keyDays').value})});
+            const data = await res.json();
+            document.getElementById('keyDisplay').innerText = "KEY: " + data.key;
+        }
+
+        async function activateLic() {
+            const res = await fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({action:'activate_license', key:document.getElementById('licKey').value})});
+            const data = await res.json();
+            if(data.success) { alert("Premium Activated!"); location.reload(); } else alert("Invalid License Key");
+        }
+
+        async function submitCandidate() {
+            await fetch(SCRIPT_URL, {method: 'POST', mode: 'no-cors', body: JSON.stringify({action:'submit', name:document.getElementById('cName').value, edu:document.getElementById('cEdu').value, grade:document.getElementById('cGrade').value, pos:document.getElementById('cPos').value})});
+            alert("Candidate Submitted!"); loadCandidates();
+        }
+
+        async function loadCandidates() {
+            const res = await fetch(SCRIPT_URL);
+            const data = await res.json();
+            document.getElementById('tableBody').innerHTML = data.map(r => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;"><b>${r[0]}</b><br><small>${r[4]} (${r[7]})</small></td><td>${r[2]}</td></tr>`).join('');
+        }
+
+        function toggleAuth(s) { document.getElementById('loginBox').classList.toggle('hidden', s); document.getElementById('signupBox').classList.toggle('hidden', !s); }
+        function showTab(t) { document.getElementById('recruitTab').classList.add('hidden'); document.getElementById('adminTab').classList.add('hidden'); document.getElementById(t).classList.remove('hidden'); }
+    </script>
+</body>
+</html>
